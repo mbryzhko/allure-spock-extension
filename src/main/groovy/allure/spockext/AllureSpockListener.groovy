@@ -98,12 +98,8 @@ class AllureSpockListener implements IRunListener {
 
 	@Override
 	void error(ErrorInfo errorInfo) {
-		println("errorInfo ${errorInfo}")
-		if (errorInfo.exception instanceof AssumptionViolatedException) {
-			getLifecycle().fire(new TestCaseCanceledEvent().withThrowable(errorInfo.exception));
-		} else {
-			getLifecycle().fire(new TestCaseFailureEvent().withThrowable(errorInfo.exception));
-		}
+		println("errorInfo ${errorInfo.method.name}")
+		getLifecycle().fire(new TestCaseFailureEvent().withThrowable(errorInfo.exception));
 	}
 
 	@Override

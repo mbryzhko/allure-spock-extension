@@ -5,14 +5,17 @@ import allure.spockext.testdata.SimpleSpec
 import org.junit.runner.Description
 import org.spockframework.runtime.JUnitDescriptionGenerator
 import org.spockframework.runtime.SpecInfoBuilder
+import org.spockframework.runtime.model.ErrorInfo
 import org.spockframework.runtime.model.FeatureInfo
 import org.spockframework.runtime.model.IterationInfo
 import org.spockframework.runtime.model.SpecInfo
 import ru.yandex.qatools.allure.Allure
+import ru.yandex.qatools.allure.events.TestCaseFailureEvent
 import ru.yandex.qatools.allure.events.TestCaseFinishedEvent
 import ru.yandex.qatools.allure.events.TestCaseStartedEvent
 import ru.yandex.qatools.allure.events.TestSuiteStartedEvent
 import ru.yandex.qatools.allure.model.LabelName
+import ru.yandex.qatools.allure.model.Status
 import spock.lang.Specification
 
 class AllureSpockListenerSpec extends Specification {
@@ -172,6 +175,25 @@ class AllureSpockListenerSpec extends Specification {
 			listener.afterIteration(iteration)
 		then:
 			1 * allure.fire(_ as TestCaseFinishedEvent)
+	}
+
+	def "TestCaseFailureEvent if fired when assertion error"() {
+		given:
+			def spec = specificationInfoFrom(SimpleSpec)
+			FeatureInfo failed = getFeatureInfo("failed test", spec)
+			def error = new AssertionError()
+			ErrorInfo errorInfo = new ErrorInfo(failed.getFeatureMethod(), error)
+
+		when:
+			listener.error(errorInfo)
+
+		then:
+			1 * allure.fire( { TestCaseFailureEvent event ->
+				assert event.getThrowable() == error
+				assert event.getStatus() == Status.FAILED
+				true
+			})
+
 	}
 
 	private SpecInfo specificationInfoFrom(Class<?> specClass) {

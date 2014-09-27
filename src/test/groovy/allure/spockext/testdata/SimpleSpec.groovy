@@ -44,4 +44,13 @@ class SimpleSpec extends Specification {
 			"foobar" 	| "foobaz"
 	}
 
+	def "failed test"() {
+		given:
+			true
+		when:
+			true
+		then:
+			1 == 2
+	}
+
 }
