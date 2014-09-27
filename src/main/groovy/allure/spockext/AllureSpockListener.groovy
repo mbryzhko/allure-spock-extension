@@ -18,14 +18,11 @@ import ru.yandex.qatools.allure.events.TestSuiteStartedEvent
 import ru.yandex.qatools.allure.utils.AnnotationManager
 import spock.lang.Unroll
 
-/**
- * Created by twuser on 9/22/2014.
- */
 class AllureSpockListener implements IRunListener {
 
 	private Allure lifecycle = Allure.LIFECYCLE;
 
-	String suiteGuid
+	private String suiteGuid
 
 	@Override
 	void beforeSpec(SpecInfo specInfo) {
@@ -57,7 +54,7 @@ class AllureSpockListener implements IRunListener {
 		}
 	}
 
-	private boolean isDataTest(Description description) {
+	private static boolean isDataTest(Description description) {
 		new AnnotationManager(description.getAnnotations()).isAnnotationPresent(Unroll)
 	}
 
@@ -123,10 +120,8 @@ class AllureSpockListener implements IRunListener {
 		getLifecycle().fire(new ClearStepStorageEvent());
 	}
 
-	public String generateSuiteUid(String suiteName) {
-		String uid = UUID.randomUUID().toString();
-
-		return uid;
+	private static String generateSuiteUid(String suiteName) {
+		UUID.randomUUID().toString();
 	}
 
 	Allure getLifecycle() {

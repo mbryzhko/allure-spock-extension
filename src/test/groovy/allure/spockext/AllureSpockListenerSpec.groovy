@@ -57,7 +57,6 @@ class AllureSpockListenerSpec extends Specification {
 			})
 	}
 
-
 	def "TestCaseStartedEvent is fired before Feature started"() {
 		given:
 			def spec = specificationInfoFrom(SimpleSpec)
@@ -95,6 +94,7 @@ class AllureSpockListenerSpec extends Specification {
 
 		when:
 			listener.beforeFeature(spec.features.find({ it.name == spec.toFeatureName("parametrised test") }))
+
 		then:
 			0 * allure.fire(_)
 	}
@@ -102,14 +102,8 @@ class AllureSpockListenerSpec extends Specification {
 	def "TestCaseStartedEvent is fired for data-driven test beforeIteration"() {
 		given:
 			def spec = specificationInfoFrom(SimpleSpec)
-
-			FeatureInfo dataDrivenFeature = spec.features.find({ it.name == spec.toFeatureName("successful test") })
-			def iteration = new IterationInfo(dataDrivenFeature, new Object[0], 1)
-
-			Description description = Description.createTestDescription(spec.getReflection(),
-					"iterationName", dataDrivenFeature.getFeatureMethod().getReflection().getAnnotations());
-			iteration.setDescription(description);
-			iteration.setName("successful test")
+			FeatureInfo dataDrivenFeature = getFeatureInfo("successful test", spec)
+			IterationInfo iteration = createIterationInfo("successful test", spec, dataDrivenFeature)
 
 		when:
 			listener.beforeIteration(iteration)
@@ -117,17 +111,12 @@ class AllureSpockListenerSpec extends Specification {
 			0 * allure.fire(_)
 	}
 
+
 	def "TestCaseStartedEvent is not fired when regular feature when beforeIteration"() {
 		given:
 			def spec = specificationInfoFrom(SimpleSpec)
-
-			FeatureInfo dataDrivenFeature = spec.features.find({ it.name == spec.toFeatureName("parametrised test") })
-			def iteration = new IterationInfo(dataDrivenFeature, new Object[0], 1)
-
-			Description description = Description.createTestDescription(spec.getReflection(),
-					"iterationName", dataDrivenFeature.getFeatureMethod().getReflection().getAnnotations());
-			iteration.setDescription(description);
-			iteration.setName("parametrised test[0]")
+			FeatureInfo dataDrivenFeature = getFeatureInfo("parametrised test", spec)
+			IterationInfo iteration = createIterationInfo("parametrised test[0]", spec, dataDrivenFeature)
 
 		when:
 			listener.beforeIteration(iteration)
@@ -143,7 +132,7 @@ class AllureSpockListenerSpec extends Specification {
 			def spec = specificationInfoFrom(SimpleSpec)
 
 		when:
-			listener.afterFeature(spec.features.find({ it.name == spec.toFeatureName("successful test") }))
+			listener.afterFeature(getFeatureInfo("successful test", spec))
 
 		then:
 			1 * allure.fire(_ as TestCaseFinishedEvent )
@@ -152,8 +141,7 @@ class AllureSpockListenerSpec extends Specification {
 	def "TestCaseFinishedEvent is not fired for data-driven feature when afterFeature"() {
 		given:
 			def spec = specificationInfoFrom(SimpleSpec)
-
-			FeatureInfo dataDrivenFeature = spec.features.find({ it.name == spec.toFeatureName("parametrised test") })
+			FeatureInfo dataDrivenFeature = getFeatureInfo("parametrised test", spec)
 
 		when:
 			listener.afterFeature(dataDrivenFeature)
@@ -164,17 +152,12 @@ class AllureSpockListenerSpec extends Specification {
 	def "TestCaseFinishedEvent is not fired for regular feature afterIteration"() {
 		given:
 			def spec = specificationInfoFrom(SimpleSpec)
-
-			FeatureInfo dataDrivenFeature = spec.features.find({ it.name == spec.toFeatureName("successful test") })
-			def iteration = new IterationInfo(dataDrivenFeature, new Object[0], 1)
-
-			Description description = Description.createTestDescription(spec.getReflection(),
-					"iterationName", dataDrivenFeature.getFeatureMethod().getReflection().getAnnotations());
-			iteration.setDescription(description);
-			iteration.setName("successful test")
+			FeatureInfo dataDrivenFeature = getFeatureInfo("successful test", spec)
+			IterationInfo iteration = createIterationInfo("successful test", spec, dataDrivenFeature)
 
 		when:
 			listener.afterIteration(iteration)
+
 		then:
 			0 * allure.fire(_)
 	}
@@ -182,14 +165,8 @@ class AllureSpockListenerSpec extends Specification {
 	def "TestCaseFinishedEvent is fired for data-driven feature afterIteration"() {
 		given:
 			def spec = specificationInfoFrom(SimpleSpec)
-
-			FeatureInfo dataDrivenFeature = spec.features.find({ it.name == spec.toFeatureName("parametrised test") })
-			def iteration = new IterationInfo(dataDrivenFeature, new Object[0], 1)
-
-			Description description = Description.createTestDescription(spec.getReflection(),
-					"iterationName", dataDrivenFeature.getFeatureMethod().getReflection().getAnnotations());
-			iteration.setDescription(description);
-			iteration.setName("parametrised test[0]")
+			FeatureInfo dataDrivenFeature = getFeatureInfo("parametrised test", spec)
+			IterationInfo iteration = createIterationInfo("parametrised test[0]", spec, dataDrivenFeature)
 
 		when:
 			listener.afterIteration(iteration)
@@ -202,4 +179,20 @@ class AllureSpockListenerSpec extends Specification {
 		new JUnitDescriptionGenerator(spec).attach()
 		return spec
 	}
+
+	private IterationInfo createIterationInfo(String iterationName, SpecInfo spec, FeatureInfo dataDrivenFeature) {
+		def iteration = new IterationInfo(dataDrivenFeature, new Object[0], 1)
+
+		Description description = Description.createTestDescription(spec.getReflection(),
+				iterationName, dataDrivenFeature.getFeatureMethod().getReflection().getAnnotations());
+		iteration.setDescription(description);
+		iteration.setName(iterationName)
+		iteration
+	}
+
+	private FeatureInfo getFeatureInfo(String featureName, SpecInfo spec) {
+		FeatureInfo dataDrivenFeature = spec.features.find({ it.name == spec.toFeatureName(featureName) })
+		dataDrivenFeature
+	}
+
 }
